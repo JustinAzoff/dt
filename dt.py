@@ -43,7 +43,12 @@ def do_test(fn, size):
         print "We think %s should be %s" % (fn, expected)
         print "But it is really      %s" % (actual)
 
-    return expected == actual
+    return expected, actual
+
+def add_md5sum(filename, checksum):
+    f = open("MD5SUMS", 'a')
+    f.write("%s  %s\n" % (checksum, filename))
+    f.close()
 
 def dt(files=10, size=1024*1024*10, nodelete=False, verbose=False):
     success = 0
@@ -52,12 +57,15 @@ def dt(files=10, size=1024*1024*10, nodelete=False, verbose=False):
         fn = "dt-%04d.img" % x
         if verbose:
             print "Pass: %04d/%04d (%s)" % (x+1, files, fn)
-        if do_test(fn, size):
+        expected, actual = do_test(fn, size)
+        if expected == actual:
             success += 1
         else:
             failures += 1
 
-        if not nodelete:
+        if nodelete:
+            add_md5sum(fn, expected)
+        else:
             os.unlink(fn)
 
     if failures:
